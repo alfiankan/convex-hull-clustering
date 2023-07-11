@@ -1,5 +1,6 @@
 class Coordinate {
-  constructor(x, y) {
+  constructor(x, y, id) {
+    this.id = id;
     this.x = x;
     this.y = y;
     this.rigid = false;
@@ -10,55 +11,89 @@ let board_matrix = [];
 board_size = 50;
 cell_size_scale = 10;
 
-function createWall({sx, sy}, direction, length) {
-  if (direction === 'vertical') {
-    for (let i = sy; i < sy + length; i++) {
-      board_matrix[sx][i].rigid = true;
+function findPoint(id) {
+  let point = null;
+  board_matrix.forEach((p) => {
+    if (p.id === id) {
+      point = p;
     }
-  } else if (direction === 'horizontal') {
-    for (let i = sx; i < sx + length; i++) {
-      board_matrix[i][sy].rigid = true;
-    }
-  }
+  });
+  return point;
 }
 
+function getLargestPoint(points) {
+  let maxX = points[0];
+  points.forEach((point) => { 
+    if (point.x > maxX.x) {
+      maxX = point;
+    }
+  });
+
+  let maxY = points[0];
+  points.forEach((point) => {
+    if (point.y > maxY.y) {
+      maxY = point;
+    }
+  });
+
+  return [maxX, maxY];
+}
+
+function getLowestPoint(points) {
+  let maxX = points[0];
+  points.forEach((point) => { 
+    if (point.x < maxX.x) {
+      maxX = point;
+    }
+  });
+
+  let maxY = points[0];
+  points.forEach((point) => {
+    if (point.y < maxY.y) {
+      maxY = point;
+    }
+  });
+
+  return [maxX, maxY];
+}
+
+
+
+
+function quickHull(coordinates) {
+  
+  let most = getLargestPoint(coordinates);
+
+  console.log(most);
+
+  findPoint(most[0].id).rigid = true;
+  findPoint(most[1].id).rigid = true;
+
+  let lowest = getLowestPoint(coordinates);
+
+  console.log(lowest);
+
+  findPoint(lowest[0].id).rigid = true;
+  findPoint(lowest[1].id).rigid = true;
+
+}
 
 function setup() {
   createCanvas(600, 600);
 
-  /*
-   [[0, 0] [0, 1] [0, 2], [0, 3], [0, 4], [0, 5], [0, 6]],
-   [[1, 0] [1, 1] [1, 2] [1, 3] [1, 4] [1, 5] [1, 6]],
-   [[2, 0] [2, 1] [2, 2] [2, 3] [2, 4] [2, 5] [2, 6]],
-   * */
-
-  // create grid
-
-  for (let i = 0; i < board_size; i++) {
-    board_matrix[i] = []
-    for (let j = 0; j < board_size; j++) {
-      board_matrix[i].push(new Coordinate(i, j));
-    }
+  for (let i = 0; i < 50; i++) {
+    const randomX = Math.floor(Math.random() * board_size);
+    const randomY = Math.floor(Math.random() * board_size);
+    const point = new Coordinate();
+    point.id = i;
+    point.x = randomX;
+    point.y = randomY;
+    point.rigid = false;
+    board_matrix.push(point);
   }
-  // create walls
-  createWall({sx: 10, sy: 14}, 'vertical', 10);
-  createWall({sx: 8, sy: 12}, 'horizontal', 5);
-  createWall({sx: 9, sy: 6}, 'horizontal', 21);
-  createWall({sx: 16, sy: 9}, 'vertical', 10);
-  createWall({sx: 6, sy: 24}, 'horizontal', 20);
-  createWall({sx: 10, sy: 27}, 'horizontal', 20);
-  createWall({sx: 6, sy: 25}, 'vertical', 6);
-  createWall({sx: 18, sy: 18}, 'horizontal', 10)
-  createWall({sx: 27, sy: 19}, 'vertical', 6);
-  createWall({sx: 27, sy: 10}, 'vertical', 8);
-  createWall({sx: 8, sy: 2}, 'vertical', 8);
-  createWall({sx: 7, sy: 12}, 'vertical', 10);
+  
+  quickHull(board_matrix);
 
-
-  board_matrix[0][0].rigid = true;
-  board_matrix[49][49].rigid = true;
-
-  console.log(board_matrix[0][0]);
 }
 
 function draw() {
@@ -66,15 +101,15 @@ function draw() {
 
   // draw grid
 
-  for (let i = 0; i < board_size; i++) {
-    for (let j = 0; j < board_size; j++) {
+  board_matrix.forEach((point) => {
       fill(120,120,120);
-      if (board_matrix[i][j].rigid) {
-        fill(255);
+      if (point.rigid) {
+        fill(255,0,0);
       }
-      circle(i*cell_size_scale, j*cell_size_scale, 5);
-    }
-  }
-
-
+      circle(point.x*cell_size_scale, point.y*cell_size_scale, 10);
+      
+      textSize(10);
+      fill(120,120,120);
+      text(`${point.x},${point.y}`, point.x*cell_size_scale, point.y*cell_size_scale);
+  });
 }
